@@ -55,11 +55,17 @@ class BUAAClock(object):
         response = self.session.post(url, headers=self.headers, data=self.data)
         if response.status_code == 200 and response.json().get('m') == '操作成功':
             if self.sendkey:
-                self.send_message_to_phone('体温上报成功', '{}体温已上报'.format(datetime.date.today()))
+                self.send_message_to_phone('{}体温上报成功'.format(datetime.date.today()),
+                                           '{}体温已上报'.format(datetime.date.today()))
         elif response.json().get('m') == '今天已经填报了':
             if self.sendkey:
                 self.send_message_to_phone('今日已上报', '{}体温已上报'.format(datetime.date.today()))
             raise AlreadySubmitException
+        elif response.json().get('m') == '填报时间为每日17时至24时':
+            if self.sendkey:
+                self.send_message_to_phone('体温上报失败，请自行打卡',
+                                           '体温上报失败：未到填报时间，请自行打卡')
+            raise EarlyException
         else:
             if self.sendkey:
                 self.send_message_to_phone('体温上报失败', '体温上报失败：{}，请自行上报'.format(response.json().get('m')))
